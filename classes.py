@@ -48,3 +48,24 @@ class ChatNode:
 
         if prefix: return f"{prefix}.{my_index}"
         else: return str(my_index)
+
+    # --- NEW: DRAG & DROP SUPPORT ---
+    def reorder_children(self, new_indices):
+        """
+        Reorders the children list based on a list of indices.
+        args:
+            new_indices: A list of integers representing the new order of the current children.
+        """
+        if not self.children: return
+        
+        # Create a map of current children
+        current_children = {i: child for i, child in enumerate(self.children)}
+        
+        new_list = []
+        for idx in new_indices:
+            if idx in current_children:
+                new_list.append(current_children[idx])
+        
+        # Ensure we didn't lose any (safety check)
+        if len(new_list) == len(self.children):
+            self.children = new_list
