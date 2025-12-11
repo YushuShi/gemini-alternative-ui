@@ -7,9 +7,12 @@ import ui
 import logic
 
 # 1. Setup
-st.set_page_config(layout="wide", page_title="Gemini Tree Chat")
+st.set_page_config(layout="wide", page_title="Conversation Tree")
 database.init_db()
 state.init_session_state()
+
+# Process URL parameters immediately (before UI render) to update state/redirect
+logic.process_url_actions()
 
 # 2. Check API
 if not config.API_KEY:
@@ -28,6 +31,7 @@ ui.render_top_bar()
 ui.render_sidebar(client)
 ui.render_chat_history()
 
+# 4. Logic Loops
 # 4. Logic Loops
 logic.process_branching(client)
 

@@ -24,3 +24,9 @@ def init_session_state():
         
     if "selected_model_key" not in st.session_state:
         st.session_state.selected_model_key = config.DEFAULT_MODEL_KEY
+
+    if "generation_seed" not in st.session_state:
+        st.session_state.generation_seed = 42 # Default seed
+    
+    if "temperature" not in st.session_state:
+        st.session_state.temperature = 0.7

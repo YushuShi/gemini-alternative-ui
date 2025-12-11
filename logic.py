@@ -23,7 +23,18 @@ def handle_response(client, prompt_text=None):
             full_context, _ = st.session_state.current_node.get_history()
             api_msgs = [m for m in full_context if m.role != "system"]
             
-            resp = client.models.generate_content(model=model_id, contents=api_msgs)
+            # Use seed and temperature
+            from google.genai import types
+            gen_config = types.GenerateContentConfig(
+                temperature=st.session_state.get("temperature", 0.7),
+                seed=int(st.session_state.get("generation_seed", 42))
+            )
+
+            resp = client.models.generate_content(
+                model=model_id, 
+                contents=api_msgs, 
+                config=gen_config
+            )
             track_usage(resp, model_pricing) 
             
             a_node = ChatNode("model", resp.text, parent=st.session_state.current_node)
@@ -61,4 +72,58 @@ def process_branching(client):
             p.pop("branch_text", None)
             st.query_params.clear()
             for k, v in p.items(): st.query_params[k] = v
+            for k, v in p.items(): st.query_params[k] = v
             if "processed_branch" in st.session_state: del st.session_state.processed_branch
+
+def process_url_actions():
+    """Handles deletion and navigation events from custom JS."""
+    rerun_needed = False
+    
+    # 1. Deletion
+    if "delete_node_id" in st.query_params:
+        target_id = st.query_params["delete_node_id"]
+        # Find node
+        target_node = st.session_state.root.find_node(target_id)
+        if target_node and target_node.parent:
+            # Remove from parent
+            target_node.parent.remove_child(target_node)
+            
+            # If deleted node was in current path, reset to parent
+            # Check if current_node is descendant
+            curr = st.session_state.current_node
+            is_descendant = False
+            while curr:
+                if curr.id == target_id:
+                    is_descendant = True
+                    break
+                curr = curr.parent
+            
+            if is_descendant:
+                st.session_state.current_node = target_node.parent
+            
+            st.success("Analysis branch deleted.")
+            rerun_needed = True
+        
+        # Clean param
+        p = dict(st.query_params)
+        p.pop("delete_node_id", None)
+        st.query_params.clear()
+        for k, v in p.items(): st.query_params[k] = v
+
+    # 2. Navigation
+    if "navigate_node_id" in st.query_params:
+        target_id = st.query_params["navigate_node_id"]
+        target_node = st.session_state.root.find_node(target_id)
+        if target_node:
+            st.session_state.current_node = target_node
+            st.session_state.show_full_history = False
+            rerun_needed = True
+
+        # Clean param
+        p = dict(st.query_params)
+        p.pop("navigate_node_id", None)
+        st.query_params.clear()
+        for k, v in p.items(): st.query_params[k] = v
+
+    if rerun_needed:
+        st.rerun()

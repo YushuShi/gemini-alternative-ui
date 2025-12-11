@@ -13,6 +13,15 @@ def init_db():
             total_cost REAL DEFAULT 0.0
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS conversations (
+            id TEXT PRIMARY KEY,
+            email TEXT,
+            title TEXT,
+            tree_data TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -58,3 +67,54 @@ def get_user_cost(email):
     row = c.fetchone()
     conn.close()
     return row[0] if row else 0.0
+
+import json
+from classes import ChatNode
+
+def save_conversation(email, root_node):
+    if not email: return
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    # Generate a title from the first user message if possible
+    title = "New Conversation"
+    if root_node.children:
+        # DFS to find first user node
+        stack = [root_node]
+        while stack:
+            curr = stack.pop(0)
+            if curr.role == "user":
+                title = curr.content[:50] + "..."
+                break
+            stack = list(curr.children) + stack # Check children
+            
+    tree_data = json.dumps(root_node.to_dict())
+    
+    c.execute('''
+        INSERT OR REPLACE INTO conversations (id, email, title, tree_data, updated_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ''', (root_node.id, email, title, tree_data))
+    
+    conn.commit()
+    conn.close()
+
+def get_user_conversations(email):
+    if not email: return []
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT id, title, updated_at FROM conversations WHERE email = ? ORDER BY updated_at DESC", (email,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def load_conversation(conversation_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT tree_data FROM conversations WHERE id = ?", (conversation_id,))
+    row = c.fetchone()
+    conn.close()
+    
+    if row:
+        data = json.loads(row[0])
+        return ChatNode.from_dict(data)
+    return None
