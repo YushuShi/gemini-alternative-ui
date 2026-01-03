@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: gemini-alternative-ui
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: reflex run --env prod --single-port --backend-host 0.0.0.0 --frontend-port $PORT
+    disk:
+      name: chat-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
