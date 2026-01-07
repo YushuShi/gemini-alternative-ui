@@ -10,7 +10,7 @@ services:
         fromDatabase:
           name: gemini-alternative-db
           property: connectionString
-  - type: static_site
+  - type: static
     name: gemini-alternative-ui
     buildCommand: reflex export --frontend-only --no-zip --env prod
     staticPublishPath: .web/build/client
