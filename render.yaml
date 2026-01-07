@@ -18,6 +18,14 @@ services:
     envVars:
       - key: REFLEX_API_URL
         value: https://gemini-alternative-api.onrender.com
+  - type: web
+    name: www.conversationTreerender.com
+    env: static
+    buildCommand: reflex export --frontend-only --no-zip --env prod
+    staticPublishPath: .web/build/client
+    envVars:
+      - key: REFLEX_API_URL
+        value: https://gemini-alternative-api.onrender.com
 databases:
   - name: gemini-alternative-db
     plan: free
