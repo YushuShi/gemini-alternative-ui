@@ -11,7 +11,7 @@ services:
           name: gemini-alternative-db
           property: connectionString
   - type: web
-    name: gemini-alternative-ui
+    name: conversationTree
     env: static
     buildCommand: reflex export --frontend-only --no-zip --env prod
     staticPublishPath: .web/build/client
