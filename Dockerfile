@@ -15,4 +15,5 @@ COPY . /app
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["sh", "-c", "reflex run --env prod --single-port --backend-host 0.0.0.0 --frontend-port $PORT"]
+RUN chmod +x /app/start.sh
+CMD ["/app/start.sh"]
